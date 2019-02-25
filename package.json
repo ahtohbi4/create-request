@@ -10,7 +10,12 @@
     "README.md"
   ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "lint": "tslint --config ./tslint.json ./**/*.ts",
+    "build": "rimraf dist && tsc",
+    "prepare": "npm run build",
+    "test": "mocha -r ts-node/register test/**/*.ts",
+    "type-check": "tsc --noEmit",
+    "ci": "npm run type-check && npm run lint && npm run test"
   },
   "repository": {
     "type": "git",
@@ -24,5 +29,18 @@
   "bugs": {
     "url": "https://github.com/ahtohbi4/create-request/issues"
   },
-  "homepage": "https://github.com/ahtohbi4/create-request#readme"
+  "homepage": "https://github.com/ahtohbi4/create-request#readme",
+  "devDependencies": {
+    "@types/chai": "^4.1.7",
+    "@types/mocha": "^5.2.6",
+    "chai": "^4.2.0",
+    "mocha": "^6.0.1",
+    "rimraf": "^2.6.3",
+    "ts-node": "^8.0.2",
+    "tslint": "^5.13.0",
+    "typescript": "^3.3.3333"
+  },
+  "peerDependencies": {
+    "typescript": ">=2.0"
+  }
 }
