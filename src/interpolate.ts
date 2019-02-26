@@ -22,7 +22,7 @@ const interpolate: Interpolator = (
 ) => pattern.replace(
     /{([^}]+)}/g,
     (_match, param) => {
-        const [name, defaultValue] = <string>param.split('=', 2);
+        const [name, defaultValue] = (param as string).split('=', 2);
         const { [name.trim()]: value = defaultValue } = params;
 
         if (value === undefined) {
