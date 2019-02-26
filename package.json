@@ -17,6 +17,16 @@
     "type-check": "tsc --noEmit",
     "ci": "npm run type-check && npm run lint && npm run test"
   },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.ts": [
+      "npm run ci"
+    ]
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ahtohbi4/create-request.git"
@@ -34,6 +44,8 @@
     "@types/chai": "^4.1.7",
     "@types/mocha": "^5.2.6",
     "chai": "^4.2.0",
+    "husky": "^1.3.1",
+    "lint-staged": "^8.1.4",
     "mocha": "^6.0.1",
     "rimraf": "^2.6.3",
     "ts-node": "^8.0.2",
