@@ -1,23 +1,28 @@
-type ValidatorType = (value: { [key: string]: any }) => undefined | { [key: string]: string };
+import Options, { OptionsParamsType, OptionsType } from './Options';
+import UrlDeclaration, { UrlDeclarationType } from './UrlDeclaration';
 
 type UrlSimpleType = string;
 
-interface UrlDeclarationType {
-    pattern: string;
-    validate?: ValidatorType | ValidatorType[];
-}
-
 type UrlType = UrlSimpleType | UrlDeclarationType;
 
-class QueryMap {
-    constructor(url = '', options = {}) {
-        this.baseUrl = url;
-        this.baseOptions = options;
+interface UrlParamsType {
+    [key: string]: number | string;
+}
 
-        return this;
+interface ConfigType {
+    [key: string]: any;
+}
+
+export default class QueryMap {
+    constructor(baseUrl: UrlType = '', baseOptions: OptionsParamsType = {}) {
+        this.baseUrl = new UrlDeclaration(baseUrl);
+        this.baseOptions = new Options(baseOptions);
     }
 
-    apply(url, options, subtree) {
+    private readonly baseUrl: UrlDeclarationType;
+    private readonly baseOptions: OptionsType;
+
+    apply(url: UrlType, options?: OptionsParamsType, subtree?: { [key: string]: any }): any {
         if (subtree) {
             return Object.entries(subtree)
                 .reduce((result, [key, branch]) => {
@@ -33,22 +38,44 @@ class QueryMap {
         return this.createRequest(url, options);
     }
 
-    createRequest(url, options) {
-        return (...params) => {
+    private createRequest<U extends UrlType, O extends OptionsType>(url: U, options?: O):
+        <F extends boolean>(levelUrl: U, levelOptions: O, isService: F) => Promise<any>;
+    private createRequest<U extends UrlType, O extends OptionsType>(url: U, options?: O):
+        (subOptions?: O) => Promise<any>;
+    private createRequest<U extends UrlType, O extends OptionsType>(url: U, options?: O):
+        (config?: ConfigType) => Promise<any>;
+
+    private createRequest<U extends UrlType, O extends OptionsParamsType>(url: U, options?: O):
+        (urlParams: UrlParamsType, subOptions?: O) => Promise<any>;
+    private createRequest<U extends UrlType, O extends OptionsParamsType>(url: U, options?: O):
+        (urlParams: UrlParamsType, config?: ConfigType) => Promise<any>;
+
+    private createRequest(url: UrlType, ...rest: ([OptionsType] | [ConfigType])) {
+        const levelUrl = new UrlDeclaration(url);
+
+        return (...params: Array<ConfigType & OptionsType & UrlParamsType & UrlType & boolean>) => {
+            const [options] = rest;
             const [, , isService] = params;
 
-            if (isService) {
-                const [baseUrl, baseOptions = {}] = params;
+            if (isService as boolean) {
+                const [subLevelUrl, subLevelOptions] = params;
 
-                return this.createRequest(`${baseUrl}${url}`, { ...baseOptions, ...options })
+                return this.createRequest(
+                    (new UrlDeclaration(subLevelUrl)).apply(levelUrl),
+                    (new Options(subLevelOptions)).apply(new Options(options)),
+                );
             }
 
-            const [urlParams = {}] = params;
-            const resultUrl = this.baseUrl + Object.entries(urlParams)
-                .reduce((result, [key, value]) => result.replace(`{${key}}`, value), url);
+            const [levelOptions] = rest;
+            const [urlParams = {}, config] = params;
 
-            return new Promise((resolve, reject) => {
-                setTimeout(() => resolve({ url: resultUrl, options: { ...this.baseOptions, ...options } }), 2000);
+            return new Promise((resolve, _reject) => {
+                setTimeout(() => resolve({
+                    options: this.baseOptions
+                        .apply(new Options(levelOptions))
+                        .apply(new Options({ config })),
+                    url: this.baseUrl.apply(levelUrl).interpolate(urlParams),
+                }), 1000);
             });
         };
     }

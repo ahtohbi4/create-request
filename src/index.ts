@@ -1,3 +1,3 @@
-import createRequest from './createRequest';
+import QueryMap from './QueryMap';
 
-export default createRequest;
+export default QueryMap;
