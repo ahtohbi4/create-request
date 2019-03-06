@@ -1,33 +1,6 @@
+import mergeValidators, { ValidatorType } from './mergeValidators';
+
 export default class UrlDeclaration {
-    static mergeValidators(...validators: any[]) {
-        const resultValidator = validators.reduce((result, validator) => {
-            if (validator === undefined) {
-                return result;
-            }
-
-            if (Array.isArray(validator)) {
-                return [
-                    ...result,
-                    ...validator,
-                ];
-            }
-
-            return [
-                ...result,
-                validator,
-            ];
-        }, []);
-
-        if (resultValidator.length < 2) {
-            return resultValidator[0];
-        }
-
-        return resultValidator;
-    }
-
-    public pattern: string;
-    public validate?: any;
-
     constructor(url: string | { pattern: string, validate?: any }) {
         if (typeof url === 'string') {
             this.pattern = url;
@@ -42,18 +15,49 @@ export default class UrlDeclaration {
         }
     }
 
-    apply(nextUrl: any) {
+    readonly pattern: string;
+    readonly validate?: ValidatorType;
+
+    apply(nextUrl: UrlDeclarationType) {
         const { pattern, validate = [] } = nextUrl;
 
         return new UrlDeclaration({
             pattern: this.pattern + pattern,
             ...((this.validate || validate)
-                ? { validate: UrlDeclaration.mergeValidators(this.validate, validate) }
+                ? { validate: mergeValidators(this.validate, validate) }
                 : {}),
         });
+    }
+
+    interpolate(params: { [key: string]: (number | string) } = {}): string {
+        let getParams = params;
+
+        const interpolatedUrl = this.pattern.replace(
+            /{([^}]+)}/g,
+            (_match, param) => {
+                const [name, defaultValue] = (param as string).split('=', 2);
+                const { [name.trim()]: value = defaultValue, ...restGetParams } = getParams;
+                getParams = restGetParams;
+
+                if (value === undefined) {
+                    return `{${param}}`;
+                }
+
+                return String(value).trim();
+            },
+        );
+
+        return `${interpolatedUrl}${Object.entries(getParams)
+            .reduce((result, [key, value], index) => {
+                const separator = (index === 0) ? '?' : '&';
+
+                return `${result}${separator}${key}=${value}`;
+            }, '')}`;
     }
 
     toString() {
         return this.pattern;
     }
 }
+
+export type UrlDeclarationType = InstanceType<typeof UrlDeclaration>;
