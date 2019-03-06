@@ -4,13 +4,13 @@
 
 ## Installation
 
-### npm
+With npm:
 
 ```
 $ npm install query-map --save
 ```
 
-### yarn
+With yarn:
 
 ```
 $ yarn add query-map
@@ -18,7 +18,7 @@ $ yarn add query-map
 
 ## Usage
 
-### Create an instance
+##### 1. Create an instance
 
 ```javascript
 const qm = new QueryMap('https://example.com', { headers: { 'Content-Type': 'application/json' } });
@@ -38,7 +38,7 @@ new QueryMap([baseUrl, baseOptions]);
   - `baseOptions.validateConfig` — some.
   - `baseOptions.validateResponse` — some.
 
-### Extend the API description by method `.apply()`.
+##### 2. Extend the API description by method `.apply()`.
 
 > **Note!** The method doesn't mutate instance created above. It returns a new level of description.
 
@@ -53,7 +53,7 @@ const API = qm.apply('/api', {}, {
 });
 ```
 
-#### Syntax
+##### Syntax
 
 ```
 <instanceof QueryMap>.apply(url[, options, subtree])
@@ -68,7 +68,7 @@ const API = qm.apply('/api', {}, {
   - `options.validateResponse` — some.
 - `subtree` — an object with nested queries declaration.
 
-### Result
+##### 3. Use the result map
 
 Now in the ends of each branch you have a function returns a `fetch`-request by URL parameters and config:
 
@@ -91,13 +91,16 @@ API.projects.getById({ id: 123 })
     .then((response) => { /* do something... */ });
 ```
 
-#### Syntax
+##### Syntax
 
 ```
 ([urlParams, config]) => <Promise>
 ```
 
-### Validating
+- `urlParams` — an object with parameters for URL,
+- `config` — some.
+
+## Validation
 
 ```javascript
 import QueryMap from 'query-map';
