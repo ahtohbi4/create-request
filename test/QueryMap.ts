@@ -19,7 +19,7 @@ const API = qm.apply(
                 item: qm.apply(
                     '/{id}',
                     {
-                        validateConfig: () => true,
+                        validateConfig: () => undefined,
                     },
                     {
                         get: qm.apply(''),

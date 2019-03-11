@@ -50,7 +50,7 @@ export default class QueryMap {
     private createRequest<U extends UrlType, O extends OptionsParamsType>(url: U, options?: O):
         (urlParams: UrlParamsType, config?: ConfigType) => Promise<any>;
 
-    private createRequest(url: UrlType, ...rest: ([OptionsType] | [ConfigType])) {
+    private createRequest(url: UrlType, ...rest: Array<OptionsType | ConfigType>) {
         const levelUrl = new UrlDeclaration(url);
 
         return (...params: Array<ConfigType & OptionsType & UrlParamsType & UrlType & boolean>) => {
@@ -66,13 +66,12 @@ export default class QueryMap {
                 );
             }
 
-            const [levelOptions] = rest;
             const [urlParams = {}, config] = params;
 
             return new Promise((resolve, _reject) => {
                 setTimeout(() => resolve({
                     options: this.baseOptions
-                        .apply(new Options(levelOptions))
+                        .apply(new Options(options))
                         .apply(new Options({ config })),
                     url: this.baseUrl.apply(levelUrl).interpolate(urlParams),
                 }), 1000);

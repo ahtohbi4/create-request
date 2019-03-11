@@ -6,19 +6,25 @@ import UrlDeclaration from '../src/UrlDeclaration';
 const PATH_A = new UrlDeclaration('/a');
 const PATH_B = new UrlDeclaration({ pattern: '/b/{b=3}' });
 
-const validateC = () => true;
+const validateC = () => undefined;
 const PATH_C = new UrlDeclaration({ pattern: '/c/{c}', validate: validateC });
 
-const validateD = () => true;
+const validateD = () => undefined;
 const PATH_D = new UrlDeclaration({ pattern: '/d/{d}', validate: validateD });
 
 describe('Class UrlDeclaration', () => {
     it('should returns expected instances', () => {
-        expect(PATH_A).to.deep.equal({ pattern: '/a' });
-        expect(PATH_B).to.deep.equal({ pattern: '/b/{b=3}' });
+        expect(PATH_A).to.deep.equal({
+            pattern: '/a',
+            validate: { getValidate: undefined },
+        });
+        expect(PATH_B).to.deep.equal({
+            pattern: '/b/{b=3}',
+            validate: { getValidate: undefined },
+        });
         expect(PATH_C).to.deep.equal({
             pattern: '/c/{c}',
-            validate: validateC,
+            validate: { getValidate: [validateC] },
         });
     });
 
@@ -34,12 +40,21 @@ describe('Class UrlDeclaration', () => {
     });
 
     it('should returns new expected instances by method apply()', () => {
-        expect(PATH_A.apply(PATH_B)).to.deep.equal({ pattern: '/a/b/{b=3}' });
-        expect(PATH_A.apply(PATH_C)).to.deep.equal({ pattern: '/a/c/{c}', validate: validateC });
-        expect(PATH_C.apply(PATH_D)).to.deep.equal({ pattern: '/c/{c}/d/{d}', validate: [validateC, validateD] });
+        expect(PATH_A.apply(PATH_B)).to.deep.equal({
+            pattern: '/a/b/{b=3}',
+            validate: { getValidate: undefined },
+        });
+        expect(PATH_A.apply(PATH_C)).to.deep.equal({
+            pattern: '/a/c/{c}',
+            validate: { getValidate: [validateC] },
+        });
+        expect(PATH_C.apply(PATH_D)).to.deep.equal({
+            pattern: '/c/{c}/d/{d}',
+            validate: { getValidate: [validateC, validateD] },
+        });
         expect(PATH_A.apply(PATH_C.apply(PATH_D))).to.deep.equal({
             pattern: '/a/c/{c}/d/{d}',
-            validate: [validateC, validateD],
+            validate: { getValidate: [validateC, validateD] },
         });
     });
 });

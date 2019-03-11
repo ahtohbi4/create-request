@@ -1,31 +1,27 @@
-import mergeValidators, { ValidatorType } from './mergeValidators';
+import { createValidator, GetValidateType, ValidatorType } from './Validator';
 
 export default class UrlDeclaration {
-    constructor(url: string | { pattern: string, validate?: any }) {
+    constructor(url: string | { pattern: string, validate?: (GetValidateType | ValidatorType) }) {
         if (typeof url === 'string') {
             this.pattern = url;
+            this.validate = createValidator(undefined);
         } else {
             const { pattern, validate } = url;
 
             this.pattern = pattern;
-
-            if (validate) {
-                this.validate = validate;
-            }
+            this.validate = createValidator(validate);
         }
     }
 
     readonly pattern: string;
-    readonly validate?: ValidatorType;
+    readonly validate: ValidatorType;
 
-    apply(nextUrl: UrlDeclarationType) {
-        const { pattern, validate = [] } = nextUrl;
+    apply(nextUrlDeclaration: UrlDeclarationType) {
+        const { pattern, validate } = nextUrlDeclaration;
 
         return new UrlDeclaration({
             pattern: this.pattern + pattern,
-            ...((this.validate || validate)
-                ? { validate: mergeValidators(this.validate, validate) }
-                : {}),
+            validate: this.validate.merge(validate),
         });
     }
 

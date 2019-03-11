@@ -1,31 +1,23 @@
-import mergeValidators, { ValidatorType } from './mergeValidators';
+import { createValidator, GetValidateType, ValidatorType } from './Validator';
 
 export interface OptionsParamsType {
     config?: { [key: string]: any };
 
-    validateConfig?: ValidatorType | ValidatorType[];
-    validateResponse?: ValidatorType | ValidatorType[];
+    validateConfig?: (GetValidateType | ValidatorType);
+    validateResponse?: (GetValidateType | ValidatorType);
 }
 
 export default class Options {
-    private static normalizeValidator(validator: ValidatorType | ValidatorType[] | undefined) {
-        if (validator === undefined || Array.isArray(validator)) {
-            return validator;
-        }
-
-        return [validator];
-    }
-
     constructor({ config = {}, validateConfig, validateResponse }: OptionsParamsType = {}) {
         this.config = config;
 
-        this.validateConfig = Options.normalizeValidator(validateConfig);
-        this.validateResponse = Options.normalizeValidator(validateResponse);
+        this.validateConfig = createValidator(validateConfig);
+        this.validateResponse = createValidator(validateResponse);
     }
 
     readonly config: { [key: string]: any };
-    readonly validateConfig?: ValidatorType[];
-    readonly validateResponse?: ValidatorType[];
+    readonly validateConfig: ValidatorType;
+    readonly validateResponse: ValidatorType;
 
     apply(nextOptions: OptionsType): OptionsType {
         const { config = {}, validateConfig, validateResponse } = nextOptions;
@@ -35,8 +27,8 @@ export default class Options {
                 ...this.config,
                 ...config,
             },
-            validateConfig: mergeValidators(this.validateConfig, validateConfig),
-            validateResponse: mergeValidators(this.validateResponse, validateResponse),
+            validateConfig: this.validateConfig.merge(validateConfig),
+            validateResponse: this.validateResponse.merge(validateResponse),
         });
     }
 }

@@ -3,8 +3,8 @@ import 'mocha';
 
 import Options from '../src/Options';
 
-const validateA = ({ a }: any) => a ? true : ({ a: 'Invalid parameter a' });
-const validateB = ({ b }: any) => b ? true : ({ b: 'Invalid parameter b' });
+const validateA = ({ a }: any) => a ? undefined : ({ a: 'Invalid parameter a' });
+const validateB = ({ b }: any) => b ? undefined : ({ b: 'Invalid parameter b' });
 
 const OPTIONS_A = new Options();
 const OPTIONS_B = new Options({ config: { method: 'post' } });
@@ -15,18 +15,18 @@ describe('Class Options', () => {
     it('should returns expected instances', () => {
         expect(OPTIONS_A.apply(OPTIONS_B)).to.deep.equal({
             config: { method: 'post' },
-            validateConfig: undefined,
-            validateResponse: undefined,
+            validateConfig: { getValidate: undefined },
+            validateResponse: { getValidate: undefined },
         });
         expect(OPTIONS_C.apply(OPTIONS_D)).to.deep.equal({
             config: { method: 'put' },
-            validateConfig: [validateA, validateB],
-            validateResponse: [validateB],
+            validateConfig: { getValidate: [validateA, validateB ] },
+            validateResponse: { getValidate: [validateB] },
         });
         expect(OPTIONS_B.apply(OPTIONS_C)).to.deep.equal({
             config: { method: 'put' },
-            validateConfig: [validateA],
-            validateResponse: undefined,
+            validateConfig: { getValidate: [validateA] },
+            validateResponse: { getValidate: undefined },
         });
     });
 });
