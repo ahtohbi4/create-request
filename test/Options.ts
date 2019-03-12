@@ -13,17 +13,17 @@ const OPTIONS_D = new Options({ validateConfig: validateB, validateResponse: val
 
 describe('Class Options', () => {
     it('should returns expected instances', () => {
-        expect(OPTIONS_A.apply(OPTIONS_B)).to.deep.equal({
+        expect(OPTIONS_A.merge(OPTIONS_B)).to.deep.equal({
             config: { method: 'post' },
             validateConfig: { getValidate: undefined },
             validateResponse: { getValidate: undefined },
         });
-        expect(OPTIONS_C.apply(OPTIONS_D)).to.deep.equal({
+        expect(OPTIONS_C.merge(OPTIONS_D)).to.deep.equal({
             config: { method: 'put' },
             validateConfig: { getValidate: [validateA, validateB ] },
             validateResponse: { getValidate: [validateB] },
         });
-        expect(OPTIONS_B.apply(OPTIONS_C)).to.deep.equal({
+        expect(OPTIONS_B.merge(OPTIONS_C)).to.deep.equal({
             config: { method: 'put' },
             validateConfig: { getValidate: [validateA] },
             validateResponse: { getValidate: undefined },

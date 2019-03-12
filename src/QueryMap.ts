@@ -1,5 +1,5 @@
 import Options, { OptionsParamsType, OptionsType } from './Options';
-import UrlDeclaration, { UrlDeclarationType } from './UrlDeclaration';
+import { createUrlDeclaration, UrlDeclarationType } from './UrlDeclaration';
 
 type UrlSimpleType = string;
 
@@ -15,14 +15,14 @@ interface ConfigType {
 
 export default class QueryMap {
     constructor(baseUrl: UrlType = '', baseOptions: OptionsParamsType = {}) {
-        this.baseUrl = new UrlDeclaration(baseUrl);
+        this.baseUrl = createUrlDeclaration(baseUrl);
         this.baseOptions = new Options(baseOptions);
     }
 
     private readonly baseUrl: UrlDeclarationType;
     private readonly baseOptions: OptionsType;
 
-    apply(url: UrlType, options?: OptionsParamsType, subtree?: { [key: string]: any }): any {
+    apply(url: any, options?: OptionsParamsType, subtree?: { [key: string]: any }): any {
         if (subtree) {
             return Object.entries(subtree)
                 .reduce((result, [key, branch]) => {
@@ -51,7 +51,7 @@ export default class QueryMap {
         (urlParams: UrlParamsType, config?: ConfigType) => Promise<any>;
 
     private createRequest(url: UrlType, ...rest: Array<OptionsType | ConfigType>) {
-        const levelUrl = new UrlDeclaration(url);
+        const levelUrl = createUrlDeclaration(url);
 
         return (...params: Array<ConfigType & OptionsType & UrlParamsType & UrlType & boolean>) => {
             const [options] = rest;
@@ -61,20 +61,34 @@ export default class QueryMap {
                 const [subLevelUrl, subLevelOptions] = params;
 
                 return this.createRequest(
-                    (new UrlDeclaration(subLevelUrl)).apply(levelUrl),
-                    (new Options(subLevelOptions)).apply(new Options(options)),
+                    (createUrlDeclaration(subLevelUrl)).merge(levelUrl),
+                    (new Options(subLevelOptions)).merge(new Options(options)),
                 );
             }
 
             const [urlParams = {}, config] = params;
 
-            return new Promise((resolve, _reject) => {
-                setTimeout(() => resolve({
-                    options: this.baseOptions
-                        .apply(new Options(options))
-                        .apply(new Options({ config })),
-                    url: this.baseUrl.apply(levelUrl).interpolate(urlParams),
-                }), 1000);
+            return new Promise((resolve, reject) => {
+                const resultUrlDeclaration = this.baseUrl.merge(levelUrl);
+                const urlParamsErrors = resultUrlDeclaration.validate.apply(urlParams);
+
+                if (urlParamsErrors) {
+                    reject(urlParamsErrors);
+                }
+
+                const resultOptions = this.baseOptions
+                    .merge(new Options(options))
+                    .merge(new Options({ config }));
+                const optionsError = resultOptions.validateConfig.apply(resultOptions.config);
+
+                if (optionsError) {
+                    reject(optionsError);
+                }
+
+                resolve({
+                    options: resultOptions,
+                    url: resultUrlDeclaration.interpolate(urlParams),
+                });
             });
         };
     }

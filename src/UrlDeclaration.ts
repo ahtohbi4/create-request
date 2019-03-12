@@ -1,7 +1,12 @@
 import { createValidator, GetValidateType, ValidatorType } from './Validator';
 
+type ParamsType = string | {
+    pattern: string,
+    validate?: (GetValidateType | ValidatorType),
+};
+
 export default class UrlDeclaration {
-    constructor(url: string | { pattern: string, validate?: (GetValidateType | ValidatorType) }) {
+    constructor(url: ParamsType) {
         if (typeof url === 'string') {
             this.pattern = url;
             this.validate = createValidator(undefined);
@@ -16,7 +21,7 @@ export default class UrlDeclaration {
     readonly pattern: string;
     readonly validate: ValidatorType;
 
-    apply(nextUrlDeclaration: UrlDeclarationType) {
+    merge(nextUrlDeclaration: UrlDeclarationType): UrlDeclarationType {
         const { pattern, validate } = nextUrlDeclaration;
 
         return new UrlDeclaration({
@@ -55,5 +60,9 @@ export default class UrlDeclaration {
         return this.pattern;
     }
 }
+
+export const createUrlDeclaration = (
+    url: (ParamsType | UrlDeclarationType),
+): UrlDeclarationType => (url instanceof UrlDeclaration) ? url : new UrlDeclaration(url);
 
 export type UrlDeclarationType = InstanceType<typeof UrlDeclaration>;

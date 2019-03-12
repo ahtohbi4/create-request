@@ -39,20 +39,20 @@ describe('Class UrlDeclaration', () => {
         expect(String(PATH_B)).to.equal('/b/{b=3}');
     });
 
-    it('should returns new expected instances by method apply()', () => {
-        expect(PATH_A.apply(PATH_B)).to.deep.equal({
+    it('should returns new expected instances by method merge()', () => {
+        expect(PATH_A.merge(PATH_B)).to.deep.equal({
             pattern: '/a/b/{b=3}',
             validate: { getValidate: undefined },
         });
-        expect(PATH_A.apply(PATH_C)).to.deep.equal({
+        expect(PATH_A.merge(PATH_C)).to.deep.equal({
             pattern: '/a/c/{c}',
             validate: { getValidate: [validateC] },
         });
-        expect(PATH_C.apply(PATH_D)).to.deep.equal({
+        expect(PATH_C.merge(PATH_D)).to.deep.equal({
             pattern: '/c/{c}/d/{d}',
             validate: { getValidate: [validateC, validateD] },
         });
-        expect(PATH_A.apply(PATH_C.apply(PATH_D))).to.deep.equal({
+        expect(PATH_A.merge(PATH_C.merge(PATH_D))).to.deep.equal({
             pattern: '/a/c/{c}/d/{d}',
             validate: { getValidate: [validateC, validateD] },
         });

@@ -19,7 +19,7 @@ export default class Options {
     readonly validateConfig: ValidatorType;
     readonly validateResponse: ValidatorType;
 
-    apply(nextOptions: OptionsType): OptionsType {
+    merge(nextOptions: OptionsType): OptionsType {
         const { config = {}, validateConfig, validateResponse } = nextOptions;
 
         return new Options({
