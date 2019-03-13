@@ -1,27 +1,39 @@
-# query-map
+# QueryMap
 
-> Utility to declarative describing queries to API with a possibility of validating request and response items.
+You:
+
+> — What a hell is that? :roll_eyes:
+
+The library is to a declarative description of the map of requests to your REST API.
 
 ## Installation
 
-With npm:
-
 ```
 $ npm install query-map --save
-```
-
-With yarn:
-
-```
-$ yarn add query-map
+// or $ yarn add query-map
 ```
 
 ## Usage
 
-##### 1. Create an instance
+You:
+
+> — Stop, dude! But why do I need in this "bicycle"? :thinking:
+
+With the "bicycle" you can create a nested map of queries with an inheritance of configurations from level to level.
+
+You:
+
+> — Ok, but how?
+
+Well look:
+
+#### 1. Create an instance
 
 ```javascript
-const qm = new QueryMap('https://example.com', { headers: { 'Content-Type': 'application/json' } });
+const qm = new QueryMap(
+    'https://example.com/api',
+     { config: { headers: { 'Content-Type': 'application/json' } } }
+ );
 ```
 
 ##### Syntax
@@ -30,27 +42,52 @@ const qm = new QueryMap('https://example.com', { headers: { 'Content-Type': 'app
 new QueryMap([baseUrl, baseOptions]);
 ```
 
-- `baseUrl` — string as a part of compound URL or object with:
-  - `baseUrl.pattern` — string as a part of compound URL,
-  - `baseUrl.validate` — function to validate URL parameters;
-- `baseOptions` — an object with:
-  - `baseOptions.config` — configuration of `fetch`-request ([see spec](https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/fetch#Parameters)),
-  - `baseOptions.validateConfig` — some.
-  - `baseOptions.validateResponse` — some.
+- `baseUrl` — a string as a base part of compound URL or object with:
+  - `baseUrl.pattern` — a string as a base part of compound URL,
+  - `[baseUrl.validate]` — a function to validate URL parameters (see *[Validation](#validation)*);
+- `[baseOptions]` — a base options for all nested queries:
+  - `[baseOptions.config={}]` — a configuration of `fetch`-request (see [specification][link to fetch spec]),
+  - `[baseOptions.validateConfig]` — a function to validate the config before starting a request (see
+*[Validation](#validation)*),
+  - `[baseOptions.validateResponse]` — a function to validate response (see *[Validation](#validation)*).
 
-##### 2. Extend the API description by method `.apply()`.
+#### 2. Describe a map of requests to your API as a tree using method `apply()`
 
 > **Note!** The method doesn't mutate instance created above. It returns a new level of description.
 
 ```javascript
-const API = qm.apply('/api', {}, {
+export const API = qm.apply('', {}, {
     projects: qm.apply('/projects', {}, {
-        create: qm.apply('/create', { config: { method: 'post' } }),
-        getById: qm.apply('/{id}'),
-        getList: qm.apply(''),
-        update: qm.apply('/{id}', { config: { method: 'put' } }),
+        create: qm.apply('/create', {
+            config: { method: 'put' },
+            validateConfig: ({ body: { name } = {} }) => (typeof name === 'string' && name !== '') ? undefined : {
+                name: 'Parameter "name" should be a non-empty string.',
+            },
+        }),
+        get: qm.apply(''),
+        item: qm.apply({
+            pattern: '/{id}',
+            validate: ({ id }) => (typeof id === 'number' && id > 0) ? undefined : {
+                id: 'Parameter "id" should be a positive number.'
+            },
+        }, {}, {
+            get: qm.apply(''),
+            update: qm.apply('', { config: { method: 'post' } }),
+        }),
     }),
 });
+
+console.dir(API);
+// => {
+//     projects: {
+//         create: (urlParams, config) => {...},
+//         get: (urlParams, config) => {...},
+//         item: {
+//             get: (urlParams, config) => {...},
+//             update: (urlParams, config) => {...},
+//         }
+//     }
+// }
 ```
 
 ##### Syntax
@@ -59,60 +96,63 @@ const API = qm.apply('/api', {}, {
 <instanceof QueryMap>.apply(url[, options, subtree])
 ```
 
-- `url` — string as a part of compound URL or object with:
-  - `url.pattern` — string as a part of compound URL,
-  - `url.validate` — function to validate URL parameters;
-- `options` — an object with:
-  - `options.config` — configuration of `fetch`-request ([see spec](https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/fetch#Parameters)),
-  - `options.validateConfig` — some.
-  - `options.validateResponse` — some.
-- `subtree` — an object with nested queries declaration.
+- `url` — a string as a part of compound URL or object with:
+  - `url.pattern` — a string as a part of compound URL,
+  - `[url.validate]` — a function to validate URL parameters (see *[Validation](#validation)*);
+- `[options]` — an object with:
+  - `[options.config={}]` — a configuration of `fetch`-request (see [specification][link to fetch spec]),
+  - `[options.validateConfig]` — a function to validate the config before starting a request (see
+*[Validation](#validation)*),
+  - `[options.validateResponse]` — a function to validate response (see *[Validation](#validation)*);
+- `[subtree]` — an object with nested queries declaration.
 
-##### 3. Use the result map
+#### 3. Use the map
 
-Now in the ends of each branch you have a function returns a `fetch`-request by URL parameters and config:
+## URL description
 
-```
-API => {
-    projects: {
-        create: (urlParams, config) => fetch('https://example.com/api/projects/create', { method: 'post', ...config }),
-        getById: (urlParams, config) => fetch('https://example.com/api/projects/{id}', config),
-        getList: (urlParams, config) => fetch('https://example.com/api/projects/create', config),
-        update: (urlParams, config) => fetch('https://example.com/api/projects/{id}', { method: 'put', ...config }),
-    },
-};
-```
+A result URL of each query is built from the parts of each level starts from the root. The parts can be both static and
+dynamic.
 
-So, all of the API queries describe in one object and have a nested structure. You can define/redefine config or
-validations for URL parameters, config, and response for each level. Use this object to generate requests to API:
+**The static** one is a simple string valid as a part of the URL. For example `/projects/create`.
 
 ```javascript
-API.projects.getById({ id: 123 })
-    .then((response) => { /* do something... */ });
+const qm = new QueryMap('https://example.com/api');
+const getProjectsList = qm.apply('/projects');
+
+// getProjectsList() => Request to https://example.com/api/projects
 ```
 
-##### Syntax
+**The dynamic** one is the same string with special placeholders in braces. For example `/projects/{id}`. Pass the URL
+parameters as an object when performing a request. If some of them will not be found in the URL-pattern it will be
+passed as GET-parameters.
 
-```
-([urlParams, config]) => <Promise>
+```javascript
+const qm = new QueryMap('https://example.com/api');
+const getProject = qm.apply('/projects/{id}');
+const getProjectsList = qm.apply('/projects/page/{page=1}');
+
+// getProject({ id: 42, foo: 'baz' }) => Request to https://example.com/api/projects/42?foo=baz
+// getProjectsList() => Request to https://example.com/api/projects/page/1
 ```
 
-- `urlParams` — an object with parameters for URL,
-- `config` — some.
+In addition, you can define a function to validate the URL parameters. In this case, instead of a string, you should
+pass an object with the next parameters:
+
+ * `pattern` — is the same string as seen above (static or dynamic part of the URL) and
+ * `validate` — function to validate (see *[Validation](#validation)*).
+
+```javascript
+const qm = new QueryMap('https://example.com/api');
+const getProject = qm.apply({
+    pattern: '/projects/{id}',
+    validate: ({ id }) => (typeof id === 'number' && id > 0) ? undefined : {
+        id: 'Parameter "id" should be a positive number.'
+    },
+});
+```
 
 ## Validation
 
-```javascript
-import QueryMap from 'query-map';
+...
 
-const qm = new QueryMap('https://example.com');
-
-const API = qm.apply('/api', {}, {
-    createProject: qm.apply('/projects/create', { config: { method: 'put' } }),
-    getProjectById: qm.apply('/projects/{id}'),
-    getProjects: qm.apply('/projects'),
-    updateProject: qm.apply('/project/{id}', { config: { method: 'post' } }),
-});
-
-
-```
+[link to fetch spec]: https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/fetch#Parameters
