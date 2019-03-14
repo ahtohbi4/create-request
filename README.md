@@ -51,8 +51,8 @@ new QueryMap([baseUrl, baseOptions]);
 - `[baseOptions]` — a base options for all nested queries:
   - `[baseOptions.config={}]` — a configuration of `fetch`-request (see [specification][fetch-spec-link]),
   - `[baseOptions.validateConfig]` — a function to validate the config before starting a request (see
-*[Validation](#validation)*),
-  - `[baseOptions.validateResponse]` — a function to validate response (see *[Validation](#validation)*).
+*[Validation](#validation-url-params-result-config-and-response)*),
+  - `[baseOptions.validateResponse]` — a function to validate response (see *[Validation](#validation-url-params-result-config-and-response)*).
 
 #### 2. Describe a map of requests to your API as a tree using method `apply()`
 
@@ -103,8 +103,8 @@ console.dir(API);
 - `[options]` — an object with:
   - `[options.config={}]` — a configuration of `fetch`-request (see [specification][fetch-spec-link]),
   - `[options.validateConfig]` — a function to validate the config before starting a request (see
-*[Validation](#validation)*),
-  - `[options.validateResponse]` — a function to validate response (see *[Validation](#validation)*);
+*[Validation](#validation-url-params-result-config-and-response)*),
+  - `[options.validateResponse]` — a function to validate response (see *[Validation](#validation-url-params-result-config-and-response)*);
 - `[subtree]` — an object with nested queries declaration.
 
 #### 3. Use the map
@@ -168,7 +168,7 @@ const getProject = qm.apply({
 });
 ```
 
-For more details see section *[Validation](#validation)*.
+For more details see section *[Validation](#validation-url-params-result-config-and-response)*.
 
 ## Validation (URL-params, result config and response)
 
