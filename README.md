@@ -145,7 +145,7 @@ In addition, you can define a function to validate the URL parameters. In this c
 pass an object with the next parameters:
 
  - `pattern` — is the same string as seen above (static or dynamic part of the URL) and
- - `validate` — function to validate (see *[Validation](#validation)*).
+ - `validate` — function to validate.
 
 ```javascript
 const qm = new QueryMap('https://example.com/api');
@@ -157,8 +157,18 @@ const getProject = qm.apply({
 });
 ```
 
-## Validation (URL-params, config and response)
+For more details see section *[Validation](#validation)*.
 
-...
+## Validation (URL-params, result config and response)
+
+You can validate:
+
+- URL parameters by passing validation function as parameter `validate` in [URL description](#url-description);
+- result config before request by passing validation function as parameter `validateConfig`;
+- response object by passing validation function as parameter `validateResponse`.
+
+The each kind of validator describing above is collected in a separate array from level to level. After you call a query
+function the arrays will be applying at a certain point of its execution. It means that each of the validation function
+from the arrays will be called and return `undefined` (if validation passed) or an object with errors.
 
 [link to fetch spec]: https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/fetch#Parameters
