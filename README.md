@@ -1,5 +1,16 @@
 # QueryMap
 
+[![NPM version][version-img]][version-link] [![Status of devDependency][dependency-img]][dependency-link] [![Travis Build Status][travis-img]][travis-link]
+
+[dependency-img]: https://david-dm.org/ahtohbi4/query-map/dev-status.svg
+[dependency-link]: https://david-dm.org/ahtohbi4/query-map#info=devDependencies
+[version-img]: https://badge.fury.io/js/query-map.svg
+[version-link]: https://badge.fury.io/js/query-map
+[travis-img]: https://travis-ci.org/ahtohbi4/query-map.svg?branch=master
+[travis-link]: https://travis-ci.org/ahtohbi4/query-map
+
+[fetch-spec-link]: https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/fetch#Parameters
+
 > — What a hell is that? :roll_eyes:
 
 The library is to a declarative description of the map of requests to your REST API.
@@ -38,7 +49,7 @@ new QueryMap([baseUrl, baseOptions]);
 
 - `baseUrl` — a declaration of base URL (see *[URL description](#url-description)*);
 - `[baseOptions]` — a base options for all nested queries:
-  - `[baseOptions.config={}]` — a configuration of `fetch`-request (see [specification][link to fetch spec]),
+  - `[baseOptions.config={}]` — a configuration of `fetch`-request (see [specification][fetch-spec-link]),
   - `[baseOptions.validateConfig]` — a function to validate the config before starting a request (see
 *[Validation](#validation)*),
   - `[baseOptions.validateResponse]` — a function to validate response (see *[Validation](#validation)*).
@@ -90,7 +101,7 @@ console.dir(API);
 
 - `url` — a declaration of URL for the level (see *[URL description](#url-description)*);
 - `[options]` — an object with:
-  - `[options.config={}]` — a configuration of `fetch`-request (see [specification][link to fetch spec]),
+  - `[options.config={}]` — a configuration of `fetch`-request (see [specification][fetch-spec-link]),
   - `[options.validateConfig]` — a function to validate the config before starting a request (see
 *[Validation](#validation)*),
   - `[options.validateResponse]` — a function to validate response (see *[Validation](#validation)*);
@@ -170,5 +181,3 @@ You can validate:
 The each kind of validator describing above is collected in a separate array from level to level. After you call a query
 function the arrays will be applying at a certain point of its execution. It means that each of the validation function
 from the arrays will be called and return `undefined` (if validation passed) or an object with errors.
-
-[link to fetch spec]: https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/fetch#Parameters
