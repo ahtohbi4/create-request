@@ -152,8 +152,9 @@ getProjectsList();
 // -> <Request 'GET https://example.com/api/projects/page/1'>
 ```
 
-In addition, you can define a function to validate the URL parameters. In this case, instead of a string, you should
-pass an object with the next parameters:
+In addition, you can define a function to validate the URL parameters (see
+*[Validation](#validation-url-params-result-config-and-response)*). In this case, instead of a string, you should pass
+an object with the next parameters:
 
  - `pattern` — is the same string as seen above (static or dynamic part of the URL) and
  - `validate` — function to validate.
@@ -167,8 +168,6 @@ const getProject = qm.apply({
     },
 });
 ```
-
-For more details see section *[Validation](#validation-url-params-result-config-and-response)*.
 
 ## Validation (URL-params, result config and response)
 
